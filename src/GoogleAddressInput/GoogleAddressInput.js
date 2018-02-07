@@ -4,7 +4,7 @@ import castArray from 'lodash/castArray';
 
 import Input from '../Input';
 import InputWithOptions from '../InputWithOptions';
-import {google2address, includes} from './google2address';
+import { google2address, includes, trySetStreetNumberIfNotReceived } from './google2address';
 import styles from './GoogleAddressInput.scss';
 
 export const GoogleAddressInputHandler = {
@@ -38,10 +38,10 @@ class GoogleAddressInput extends React.Component {
   componentWillReceiveProps(nextProps) {
     if (nextProps.value !== this.props.value) {
       this._getSuggestions(nextProps.value).then(suggestions => {
-        this.setState({suggestions});
+        this.setState({ suggestions });
       }).catch(() => {
         // Nothing really to do...
-        this.setState({suggestions: []});
+        this.setState({ suggestions: [] });
       });
     }
   }
@@ -53,15 +53,15 @@ class GoogleAddressInput extends React.Component {
     } = this.state;
 
     const options = [
-      ...suggestions.map(({description}, id) => ({id, value: description})),
+      ...suggestions.map(({ description }, id) => ({ id, value: description })),
 
       ...(
         this.props.footer ?
-        [{
-          id: suggestions.length,
-          value: this.props.footer,
-          ...this.props.footerOptions
-        }] :
+          [{
+            id: suggestions.length,
+            value: this.props.footer,
+            ...this.props.footerOptions
+          }] :
           []
       )
     ];
@@ -80,13 +80,13 @@ class GoogleAddressInput extends React.Component {
           options={options}
           fixedFooter={(suggestions.length && this.props.poweredByGoogle) ? GoogleAddressInput.getGoogleFooter() : null}
           selectedHighlight={false}
-          />
+        />
       </div>
     );
   }
 
   static getGoogleFooter = () =>
-    <div className={styles.googleFooter} data-hook="google-footer"/>
+    <div className={styles.googleFooter} data-hook="google-footer" />
 
   focus() {
     this.autocomplete.focus();
@@ -107,10 +107,10 @@ class GoogleAddressInput extends React.Component {
     }
 
     this._getSuggestions(value).then(suggestions => {
-      this.setState({suggestions});
+      this.setState({ suggestions });
     }).catch(() => {
       // Nothing really to do...
-      this.setState({suggestions: []});
+      this.setState({ suggestions: [] });
     });
   }
 
@@ -119,7 +119,7 @@ class GoogleAddressInput extends React.Component {
 
     if (this.props.clearSuggestionsOnBlur) {
       this.timer = setTimeout(() => {
-        this.setState({suggestions: []});
+        this.setState({ suggestions: [] });
       }, 250);
     }
   }
@@ -136,7 +136,7 @@ class GoogleAddressInput extends React.Component {
 
     const suggestion = this.state.suggestions.find(s => s.description === value);
 
-    this.setState({suggestions: [], value: this.props.value || value});
+    this.setState({ suggestions: [], value: this.props.value || value });
 
     const requestId = ++this.geocodeRequestId;
     let handlerCall;
@@ -170,11 +170,11 @@ class GoogleAddressInput extends React.Component {
         // value returned by suggestions list
         return;
       }
-
+      const firstResult = trySetStreetNumberIfNotReceived(results[0], this.state.value);
       const result = {
         originValue: value,
-        googleResult: results[0],
-        address: google2address(results[0])
+        googleResult: firstResult,
+        address: google2address(firstResult)
       };
 
       this.props.onSet && this.props.onSet(result);
@@ -186,7 +186,7 @@ class GoogleAddressInput extends React.Component {
   }
 
   onManuallyInput(inputValue) {
-    const {value, fallbackToManual, onSet} = this.props;
+    const { value, fallbackToManual, onSet } = this.props;
     if (fallbackToManual) {
       this._getSuggestions(inputValue, typeof value !== 'undefined').then(suggestions => {
         if (suggestions.length === 0) {
@@ -225,16 +225,16 @@ class GoogleAddressInput extends React.Component {
         return;
       }
 
-      this.setState({value}, () => resolve());
+      this.setState({ value }, () => resolve());
 
     }).then(() => {
       if (value === '') {
         return Promise.resolve([]);
       }
 
-      const request = {types, components: 'country:' + countryCode, input: valuePrefix + value};
+      const request = { types, components: 'country:' + countryCode, input: valuePrefix + value };
 
-      return this.client.autocomplete({request});
+      return this.client.autocomplete({ request });
     }).then(results => {
       if (results.length === 0) {
         return Promise.resolve([]);
