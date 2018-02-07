@@ -9,14 +9,23 @@ class PopoverMenuItem extends WixComponent {
   static propTypes = {
     icon: PropTypes.node,
     text: PropTypes.string,
-    onClick: PropTypes.func
+    onClick: PropTypes.func,
+    size: PropTypes.oneOf(['normal', 'large'])
   };
+
+  static defaultProps = {
+    size: 'normal'
+  };
+
+  typographyStyle() {
+    return this.props.size === 'normal' ? typography.t3 : typography.t1;
+  }
 
   render() {
     return (
-      <li className={classNames(typography.t3, styles.menuItem)}>
+      <li className={classNames(this.typographyStyle(), styles.menuItem)}>
         <button type="button" className={styles.button} onClick={this.props.onClick}>
-          {this.props.icon && <span className={styles.icon}>{this.props.icon}</span>}
+          <span className={styles.icon}>{this.props.icon}</span>
           <span className={styles.text} data-hook="menu-item-text">{this.props.text}</span>
         </button>
       </li>
