@@ -71,6 +71,7 @@ export const trySetStreetNumberIfNotReceived = (google, inputValue) => {
   }
   google.address_components.unshift({
     long_name: addressParts.join(),
+    short_name: addressParts.join(),
     types: ['street_number']
   });
   return google;
