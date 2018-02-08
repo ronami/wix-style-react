@@ -141,8 +141,8 @@ describe('google 2 address', () => {
     expect(google2address(aGoogleResponse({adr_address: address})).formattedStreetAddress).toEqual('Ha-Namal St 40');
   });
 
-  it('should complete street address in some cases when google api doesnt return it', () => {
-    const given = {
+  it('should complete street addres with user input (5-202) in case google api doesnt return it', () => {
+    const resultFromGoogle = {
       address_components: [
         {
           long_name: 'Chemin West Hill',
@@ -151,39 +151,89 @@ describe('google 2 address', () => {
         }
       ]
     };
-    const cloned = deepClone(given);
+    const userInput = '5-202 Chemin';
+    const actual = trySetStreetNumberIfNotReceived(resultFromGoogle, userInput);
 
-    cloned.address_components.unshift({
-      long_name: '5-202',
-      short_name: '5-202',
-      types: ['street_number']
-    });
-    expect(trySetStreetNumberIfNotReceived(deepClone(given), '5-202 Chemin')).toEqual(cloned);
+    const expected = {
+      address_components: [
+        {
+          long_name: '5-202',
+          short_name: '5-202',
+          types: ['street_number']
+        },
+        {
+          long_name: 'Chemin West Hill',
+          short_name: 'Chemin West Hill',
+          types: ['route']
+        }
+      ]
+    };
 
-    const cloned2 = deepClone(given);
-    cloned2.address_components.unshift({
-      long_name: '5/202',
-      short_name: '5/202',
-      types: ['street_number']
-    });
-    expect(trySetStreetNumberIfNotReceived(deepClone(given), '5/202 Chemin')).toEqual(cloned2);
-
-    const cloned3 = deepClone(given);
-    cloned3.address_components.unshift({
-      long_name: '5 202',
-      short_name: '5 202',
-      types: ['street_number']
-    });
-    expect(trySetStreetNumberIfNotReceived(deepClone(given), '5 202 Chemin')).toEqual(cloned3);
-
-    const cloned4 = deepClone(given);
-    cloned4.address_components.unshift({
-      long_name: '5 202',
-      short_name: '5 202',
-      types: ['street_number']
-    });
-    expect(trySetStreetNumberIfNotReceived(deepClone(given), 'Chemin 5 202')).not.toEqual(cloned4);
+    expect(actual).toEqual(expected);
   });
+
+  it('should complete street addres with user input (5/202) in case google api doesnt return it', () => {
+    const resultFromGoogle = {
+      address_components: [
+        {
+          long_name: 'Chemin West Hill',
+          short_name: 'Chemin West Hill',
+          types: ['route']
+        }
+      ]
+    };
+    const userInput = '5/202 Chemin';
+    const actual = trySetStreetNumberIfNotReceived(resultFromGoogle, userInput);
+
+    const expected = {
+      address_components: [
+        {
+          long_name: '5/202',
+          short_name: '5/202',
+          types: ['street_number']
+        },
+        {
+          long_name: 'Chemin West Hill',
+          short_name: 'Chemin West Hill',
+          types: ['route']
+        }
+      ]
+    };
+
+    expect(actual).toEqual(expected);
+  });
+
+  it('should complete street addres with user input (5 202) in case google api doesnt return it', () => {
+    const resultFromGoogle = {
+      address_components: [
+        {
+          long_name: 'Chemin West Hill',
+          short_name: 'Chemin West Hill',
+          types: ['route']
+        }
+      ]
+    };
+    const userInput = '5 202 Chemin';
+    const actual = trySetStreetNumberIfNotReceived(resultFromGoogle, userInput);
+
+    const expected = {
+      address_components: [
+        {
+          long_name: '5 202',
+          short_name: '5 202',
+          types: ['street_number']
+        },
+        {
+          long_name: 'Chemin West Hill',
+          short_name: 'Chemin West Hill',
+          types: ['route']
+        }
+      ]
+    };
+
+    expect(actual).toEqual(expected);
+  });
+
 
   it('should not complete street address in case it has been returned from google api', () => {
     const given = {
@@ -195,7 +245,7 @@ describe('google 2 address', () => {
         }
       ]
     };
-    const cloned = deepClone(given);
-    expect(trySetStreetNumberIfNotReceived(given, '5-555 Chemin')).toEqual(cloned);
+    const expected = deepClone(given);
+    expect(trySetStreetNumberIfNotReceived(given, '77777 Chemin')).toEqual(expected);
   });
 });
